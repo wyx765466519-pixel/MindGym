@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MindGym - 情绪训练</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(180deg, #FDFCFB 0%, #F5F0EB 100%);
+      color: #2D3436;
+      min-height: 100vh;
+      padding-bottom: 80px;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      opacity: 0.03;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Header */
+    .header {
+      background: transparent;
+      padding: 24px 20px 32px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .logo {
+      font-size: 20px;
+      font-weight: 600;
+      color: #2D3436;
+      letter-spacing: 2px;
+      margin-bottom: 4px;
+    }
+
+    .tagline {
+      font-size: 12px;
+      color: #7F8C8D;
+      letter-spacing: 1px;
+    }
+
+    .today-count {
+      font-size: 12px;
+      color: #27AE60;
+      margin-top: 8px;
+    }
+
+    /* Nav */
+    .nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #FFFFFF;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0 20px;
+      box-shadow: 0 -2px 20px rgba(0,0,0,0.05);
+      z-index: 100;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-decoration: none;
+      color: #B2BEC3;
+      font-size: 11px;
+      gap: 4px;
+      transition: color 0.2s;
+    }
+
+    .nav-item.active {
+      color: #27AE60;
+    }
+
+    .nav-icon {
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    /* Page Container */
+    .page {
+      display: none;
+      padding: 0 20px 20px;
+      max-width: 480px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    /* Home - Gym Animation */
+    .home-intro {
+      text-align: center;
+      padding: 60px 20px 32px;
+    }
+
+    .gym-trigger {
+      display: inline-block;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .gym-trigger:hover {
+      transform: scale(1.1);
+    }
+
+    .gym-trigger:active {
+      transform: scale(0.95);
+    }
+
+    .gym-icon {
+      font-size: 100px;
+      display: block;
+      line-height: 1;
+      animation: gym-bounce 1.2s ease-in-out infinite;
+    }
+
+    .gym-trigger:hover .gym-icon {
+      animation-duration: 0.6s;
+    }
+
+    @keyframes gym-bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+
+    .gym-hint {
+      font-size: 13px;
+      color: #95A5A6;
+      margin-top: 20px;
+    }
+
+    /* Emotion Select */
+    .form-select {
+      width: 100%;
+      border: 1px solid #DFE6E9;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+      background: #FAFBFC;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237F8C8D' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      padding-right: 40px;
+    }
+
+    .form-select:focus {
+      outline: none;
+      border-color: #27AE60;
+      background-color: #FFFFFF;
+    }
+
+    /* Duration Selector */
+    .duration-selector {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .duration-selector .duration-unit {
+      flex: 1;
+    }
+
+    .duration-selector .duration-label {
+      font-size: 12px;
+      color: #7F8C8D;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .duration-selector select {
+      width: 100%;
+    }
+
+    /* Record Form */
+    .form-section {
+      background: #FFFFFF;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+
+    .form-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: #2D3436;
+      margin-bottom: 12px;
+    }
+
+    .form-label {
+      font-size: 12px;
+      color: #7F8C8D;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .form-input {
+      width: 100%;
+      border: 1px solid #DFE6E9;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+      background: #FAFBFC;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #27AE60;
+      background: #FFFFFF;
+    }
+
+    textarea.form-input {
+      resize: none;
+      min-height: 80px;
+      line-height: 1.6;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      background: #27AE60;
+      color: #FFFFFF;
+      border: none;
+      border-radius: 16px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .submit-btn:hover {
+      background: #229954;
+    }
+
+    .submit-btn:disabled {
+      background: #BDC3C7;
+      cursor: not-allowed;
+    }
+
+    /* Ongoing Card */
+    .ongoing-card {
+      background: #FFFFFF;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+
+    .ongoing-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .ongoing-emotion {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ongoing-icon {
+      font-size: 28px;
+    }
+
+    .ongoing-info h3 {
+      font-size: 15px;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .ongoing-info span {
+      font-size: 12px;
+      color: #95A5A6;
+    }
+
+    .ongoing-status {
+      background: #FFF3E0;
+      color: #E67E22;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .ongoing-content {
+      font-size: 13px;
+      color: #636E72;
+      line-height: 1.6;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: #FAFBFC;
+      border-radius: 10px;
+    }
+
+    .result-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .result-btn {
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .result-btn.success {
+      background: #E8F5E9;
+      color: #27AE60;
+    }
+
+    .result-btn.fail {
+      background: #FDEDEC;
+      color: #E74C3C;
+    }
+
+    .result-btn:hover {
+      transform: scale(1.02);
+    }
+
+    /* Archive List */
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .filter-tab {
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      background: #FFFFFF;
+      color: #7F8C8D;
+      border: 1px solid #DFE6E9;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .filter-tab.active {
+      background: #27AE60;
+      color: #FFFFFF;
+      border-color: #27AE60;
+    }
+
+    .archive-card {
+      background: #FFFFFF;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    }
+
+    .archive-icon {
+      font-size: 26px;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #F8F6F3;
+      border-radius: 12px;
+    }
+
+    .archive-info {
+      flex: 1;
+    }
+
+    .archive-info h4 {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .archive-info span {
+      font-size: 12px;
+      color: #95A5A6;
+    }
+
+    .archive-result {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .archive-result.success {
+      background: #E8F5E9;
+      color: #27AE60;
+    }
+
+    .archive-result.fail {
+      background: #FDEDEC;
+      color: #E74C3C;
+    }
+
+    /* Archive emotion header */
+    .archive-emotion-header {
+      font-size: 15px;
+      font-weight: 600;
+      color: #2D3436;
+      margin: 20px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #DFE6E9;
+    }
+
+    .archive-emotion-header:first-child {
+      margin-top: 0;
+    }
+
+    /* Data Manage Bar */
+    .data-manage-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .data-manage-btn {
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .data-manage-btn.export {
+      background: #E8F5E9;
+      color: #27AE60;
+    }
+
+    .data-manage-btn.export:hover {
+      background: #27AE60;
+      color: #FFFFFF;
+    }
+
+    .data-manage-btn.clear {
+      background: #FDEDEC;
+      color: #E74C3C;
+    }
+
+    .data-manage-btn.clear:hover {
+      background: #E74C3C;
+      color: #FFFFFF;
+    }
+
+    /* Archive card with delete */
+    .archive-card-wrap {
+      position: relative;
+    }
+
+    .archive-card-delete {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #FDEDEC;
+      color: #E74C3C;
+      border: none;
+      font-size: 14px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .archive-card-wrap:hover .archive-card-delete {
+      opacity: 1;
+    }
+
+    .archive-card-delete:hover {
+      background: #E74C3C;
+      color: #FFFFFF;
+    }
+
+    /* Archive group title */
+    .archive-group-title {
+      font-size: 13px;
+      font-weight: 500;
+      margin: 12px 0 8px;
+      padding-left: 4px;
+    }
+
+    .archive-group-title.success {
+      color: #27AE60;
+    }
+
+    .archive-group-title.fail {
+      color: #E74C3C;
+    }
+
+    /* Archive detail expansion */
+    .archive-detail {
+      background: #FAFAFA;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      margin-top: -6px;
+    }
+
+    .detail-section {
+      margin-bottom: 12px;
+    }
+
+    .detail-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .detail-label {
+      font-size: 11px;
+      color: #95A5A6;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .detail-value {
+      font-size: 14px;
+      color: #2D3436;
+      line-height: 1.5;
+    }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: #FFFFFF;
+      border-radius: 16px;
+      padding: 20px 16px;
+      text-align: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 600;
+      color: #27AE60;
+    }
+
+    .stat-value.rate {
+      color: #E67E22;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #95A5A6;
+      margin-top: 6px;
+    }
+
+    .chart-section {
+      background: #FFFFFF;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+
+    .chart-title {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 16px;
+      height: 120px;
+      padding: 0 8px;
+    }
+
+    .bar-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+    }
+
+    .bar-container {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      align-items: flex-end;
+    }
+
+    .bar {
+      width: 100%;
+      background: linear-gradient(180deg, #27AE60 0%, #A3D9B1 100%);
+      border-radius: 6px 6px 0 0;
+      min-height: 4px;
+    }
+
+    .bar-label {
+      font-size: 11px;
+      color: #95A5A6;
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    .bar-value {
+      font-size: 11px;
+      color: #2D3436;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #95A5A6;
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .empty-text {
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .empty-sub {
+      font-size: 12px;
+      color: #BDC3C7;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 200;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #FFFFFF;
+      border-radius: 24px 24px 0 0;
+      padding: 24px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #F8F6F3;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Back Button */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      color: #27AE60;
+      text-decoration: none;
+      margin-bottom: 20px;
+      cursor: pointer;
+    }
+
+    .back-btn::before {
+      content: '←';
+    }
+
+    /* Page Title */
+    .page-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">MINDGYM</div>
+    <div class="tagline">每一次记录，都是训练</div>
+    <div class="today-count" id="todayCount"></div>
+  </header>
+
+  <!-- Page: Home (Record) -->
+  <div class="page active" id="page-home">
+    <div class="home-intro">
+      <div class="gym-trigger" id="gymTrigger">
+        <span class="gym-icon">🏋️</span>
+        <div class="gym-hint">点击开始训练</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page: Ongoing -->
+  <div class="page" id="page-ongoing">
+    <h2 class="page-title">当前进程</h2>
+    <div id="ongoingList"></div>
+  </div>
+
+  <!-- Page: Archive -->
+  <div class="page" id="page-archive">
+    <h2 class="page-title">归档</h2>
+    <div class="data-manage-bar">
+      <button class="data-manage-btn export" id="exportCsvBtn">📥 导出CSV</button>
+      <button class="data-manage-btn clear" id="clearAllBtn">🗑️ 清空历史</button>
+    </div>
+    <div class="filter-tabs" id="filterTabs">
+      <div class="filter-tab active" data-filter="all">全部</div>
+      <div class="filter-tab" data-filter="焦虑">焦虑</div>
+      <div class="filter-tab" data-filter="烦躁">烦躁</div>
+      <div class="filter-tab" data-filter="厌学">厌学</div>
+      <div class="filter-tab" data-filter="刷手机>1h">刷手机>1h</div>
+      <div class="filter-tab" data-filter="困">困</div>
+      <div class="filter-tab" data-filter="熬夜">熬夜</div>
+      <div class="filter-tab" data-filter="忽略优先级">忽略优先级</div>
+      <div class="filter-tab" data-filter="其他">其他</div>
+    </div>
+    <div id="archiveList"></div>
+  </div>
+
+  <!-- Page: Stats -->
+  <div class="page" id="page-stats">
+    <h2 class="page-title">统计分析</h2>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="statTotal">0</div>
+        <div class="stat-label">总训练</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value rate" id="statRate">--%</div>
+        <div class="stat-label">成功率</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statAvg">--</div>
+        <div class="stat-label">平均用时</div>
+      </div>
+    </div>
+    <div class="chart-section">
+      <div class="chart-title">各情绪类型成功率</div>
+      <div class="bar-chart" id="barChart"></div>
+    </div>
+  </div>
+
+  <!-- Record Form (Modal) -->
+  <div class="modal" id="recordModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">开始训练</div>
+        <button class="modal-close" id="modalClose">×</button>
+      </div>
+      <div class="form-section">
+        <label class="form-label">选择情绪标签</label>
+        <select class="form-select" id="formEmotionType">
+          <option value="">请选择...</option>
+          <option value="焦虑">😰 焦虑</option>
+          <option value="烦躁">😤 烦躁</option>
+          <option value="厌学">📚 厌学</option>
+          <option value="刷手机>1h">📱 刷手机>1h</option>
+          <option value="困">😴 困</option>
+          <option value="熬夜">🌙 熬夜</option>
+          <option value="忽略优先级">⚠️ 忽略优先级</option>
+          <option value="其他">❓ 其他</option>
+        </select>
+      </div>
+      <div class="form-section">
+        <label class="form-label">事情经过（选填）</label>
+        <textarea class="form-input" id="formDesc" placeholder="发生了什么..."></textarea>
+      </div>
+      <div class="form-section">
+        <label class="form-label">原因分析（选填）</label>
+        <textarea class="form-input" id="formReason" placeholder="是什么引发了这种情绪..."></textarea>
+      </div>
+      <div class="form-section">
+        <label class="form-label">打算怎么做</label>
+        <textarea class="form-input" id="formSolution" placeholder="我想尝试的方法..."></textarea>
+      </div>
+      <div style="height: 16px"></div>
+      <button class="submit-btn" id="submitRecord">开始训练</button>
+    </div>
+  </div>
+
+  <!-- Result Form (Modal) -->
+  <div class="modal" id="resultModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title" id="resultModalTitle">标记结果</div>
+        <button class="modal-close" id="resultModalClose">×</button>
+      </div>
+      <div id="resultFormContent">
+      </div>
+      <div style="height: 16px"></div>
+      <button class="submit-btn" id="submitResult">确认</button>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <a href="#" class="nav-item active" data-page="home">
+      <span class="nav-icon">🏠</span>
+      <span>首页</span>
+    </a>
+    <a href="#" class="nav-item" data-page="ongoing">
+      <span class="nav-icon">🎯</span>
+      <span>当前进程</span>
+    </a>
+    <a href="#" class="nav-item" data-page="archive">
+      <span class="nav-icon">📁</span>
+      <span>归档</span>
+    </a>
+    <a href="#" class="nav-item" data-page="stats">
+      <span class="nav-icon">📊</span>
+      <span>统计</span>
+    </a>
+  </nav>
+
+  <script>
+    // Emotion config
+    const emotions = {
+      '焦虑': { icon: '😰' },
+      '烦躁': { icon: '😤' },
+      '厌学': { icon: '📚' },
+      '刷手机>1h': { icon: '📱' },
+      '困': { icon: '😴' },
+      '熬夜': { icon: '🌙' },
+      '忽略优先级': { icon: '⚠️' },
+      '其他': { icon: '❓' }
+    };
+
+    // State
+    let currentRecordId = null;
+    let currentResultType = null;
+    let records = JSON.parse(localStorage.getItem('mindgym_records') || '[]');
+
+    // DOM
+    const recordModal = document.getElementById('recordModal');
+    const resultModal = document.getElementById('resultModal');
+    const pages = document.querySelectorAll('.page');
+    const navItems = document.querySelectorAll('.nav-item');
+
+    // Parse duration string to minutes
+    function parseDurationToMinutes(durationStr) {
+      if (!durationStr) return 0;
+      let minutes = 0;
+      const dayMatch = durationStr.match(/(\d+)\s*天/);
+      const hourMatch = durationStr.match(/(\d+)\s*[小时时]/);
+      const minMatch = durationStr.match(/(\d+)\s*分/);
+      if (dayMatch) minutes += parseInt(dayMatch[1]) * 24 * 60;
+      if (hourMatch) minutes += parseInt(hourMatch[1]) * 60;
+      if (minMatch) minutes += parseInt(minMatch[1]);
+      if (minutes === 0 && /^\d+$/.test(durationStr.trim())) minutes = parseInt(durationStr.trim());
+      return minutes;
+    }
+
+    // Format minutes to duration string
+    function formatMinutesToDuration(minutes) {
+      if (minutes <= 0) return '--';
+      const days = Math.floor(minutes / (24 * 60));
+      const hours = Math.floor((minutes % (24 * 60)) / 60);
+      if (days > 0) return `${days}天${hours}小时`;
+      if (hours > 0) return `${hours}小时`;
+      return `${minutes}分钟`;
+    }
+
+    // Initialize
+    function init() {
+      setupGymTrigger();
+      setupNav();
+      setupModals();
+      setupDataManage();
+      render();
+    }
+
+    // Setup data manage buttons
+    function setupDataManage() {
+      const exportBtn = document.getElementById('exportCsvBtn');
+      const clearBtn = document.getElementById('clearAllBtn');
+      
+      if (exportBtn) {
+        exportBtn.addEventListener('click', exportToCsv);
+      }
+      
+      if (clearBtn) {
+        clearBtn.addEventListener('click', confirmClearAll);
+      }
+    }
+
+    // Export records to CSV
+    function exportToCsv() {
+      if (records.length === 0) {
+        alert('暂无记录可导出');
+        return;
+      }
+      
+      const headers = ['情绪类型', '事情经过', '原因分析', '打算怎么做', '结果', '有效方法/失败原因', '用时', '创建时间'];
+      const rows = records.map(r => [
+        r.emotion_type || '',
+        (r.description || '').replace(/"/g, '""'),
+        (r.reason || '').replace(/"/g, '""'),
+        (r.solution || '').replace(/"/g, '""'),
+        r.result === 'success' ? '成功' : r.result === 'fail' ? '失败' : '',
+        r.result === 'success' ? (r.effective_action || '').replace(/"/g, '""') : (r.fail_reason || '').replace(/"/g, '""'),
+        r.duration || '',
+        new Date(r.created_at).toLocaleString('zh-CN')
+      ]);
+      
+      const csvContent = [headers, ...rows]
+        .map(row => row.map(cell => `"${cell}"`).join(','))
+        .join('\n');
+      
+      const BOM = '\uFEFF';
+      const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `mindgym_records_${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Confirm and clear all records
+    function confirmClearAll() {
+      if (records.length === 0) {
+        alert('暂无记录可清空');
+        return;
+      }
+      
+      const confirmed = confirm('确定要清空所有记录吗？此操作不可恢复。');
+      if (confirmed) {
+        records = [];
+        save();
+        render();
+        alert('已清空所有记录');
+      }
+    }
+
+    // Delete single record
+    function deleteRecord(id) {
+      const confirmed = confirm('确定要删除这条记录吗？');
+      if (confirmed) {
+        records = records.filter(r => r.id !== id);
+        save();
+        render();
+      }
+    }
+
+    // Setup gym trigger
+    function setupGymTrigger() {
+      const gymTrigger = document.getElementById('gymTrigger');
+      if (gymTrigger) {
+        gymTrigger.addEventListener('click', () => {
+          openRecordModal();
+        });
+      }
+    }
+
+    // Setup navigation
+    function setupNav() {
+      navItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+          e.preventDefault();
+          const page = item.dataset.page;
+          showPage(page);
+        });
+      });
+    }
+
+    // Show page
+    function showPage(pageName) {
+      pages.forEach(p => p.classList.remove('active'));
+      navItems.forEach(n => n.classList.remove('active'));
+      
+      document.getElementById(`page-${pageName}`).classList.add('active');
+      document.querySelector(`[data-page="${pageName}"]`).classList.add('active');
+      
+      render();
+    }
+
+    // Setup modals
+    function setupModals() {
+      document.getElementById('modalClose').addEventListener('click', closeRecordModal);
+      document.getElementById('resultModalClose').addEventListener('click', closeResultModal);
+
+      document.getElementById('submitRecord').addEventListener('click', submitRecord);
+      document.getElementById('submitResult').addEventListener('click', submitResult);
+    }
+
+    // Open record modal
+    function openRecordModal() {
+      document.getElementById('formEmotionType').value = '';
+      document.getElementById('formDesc').value = '';
+      document.getElementById('formReason').value = '';
+      document.getElementById('formSolution').value = '';
+      recordModal.classList.add('active');
+    }
+
+    // Close record modal
+    function closeRecordModal() {
+      recordModal.classList.remove('active');
+    }
+
+    // Open result modal
+    function openResultModal(id, type) {
+      currentRecordId = id;
+      currentResultType = type;
+      const formContent = document.getElementById('resultFormContent');
+      
+      if (type === 'success') {
+        document.getElementById('resultModalTitle').textContent = '记录成功';
+        
+        // Generate day options (1-29)
+        let dayOptions = '';
+        for (let i = 1; i <= 29; i++) {
+          dayOptions += `<option value="${i}">${i}天</option>`;
+        }
+        
+        // Generate hour options (0-11)
+        let hourOptions = '';
+        for (let i = 0; i <= 11; i++) {
+          hourOptions += `<option value="${i}">${i}小时</option>`;
+        }
+        
+        formContent.innerHTML = `
+          <div class="form-section">
+            <label class="form-label">有效方法</label>
+            <textarea class="form-input" id="formEffective" placeholder="这次什么方法有效..."></textarea>
+          </div>
+          <div class="form-section">
+            <label class="form-label">预计用时</label>
+            <div class="duration-selector">
+              <div class="duration-unit">
+                <select class="form-select" id="formDurationDay">
+                  ${dayOptions}
+                </select>
+              </div>
+              <div class="duration-unit">
+                <select class="form-select" id="formDurationHour">
+                  ${hourOptions}
+                </select>
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        document.getElementById('resultModalTitle').textContent = '复盘失败原因';
+        formContent.innerHTML = `
+          <div class="form-section">
+            <label class="form-label">复盘失败原因</label>
+            <textarea class="form-input" id="formFailReason" placeholder="是什么导致了失控..."></textarea>
+          </div>
+        `;
+      }
+      resultModal.classList.add('active');
+    }
+
+    // Close result modal
+    function closeResultModal() {
+      resultModal.classList.remove('active');
+      currentRecordId = null;
+      currentResultType = null;
+    }
+
+    // Submit record
+    function submitRecord() {
+      const emotionType = document.getElementById('formEmotionType').value;
+      const solution = document.getElementById('formSolution').value.trim();
+      
+      if (!emotionType) {
+        alert('请选择情绪标签');
+        return;
+      }
+      if (!solution) {
+        alert('请输入打算怎么做');
+        return;
+      }
+
+      const record = {
+        id: Date.now(),
+        emotion_type: emotionType,
+        description: document.getElementById('formDesc').value.trim(),
+        reason: document.getElementById('formReason').value.trim(),
+        solution: solution,
+        status: 'ongoing',
+        result: null,
+        duration: '',
+        effective_action: '',
+        fail_reason: '',
+        created_at: new Date().toISOString()
+      };
+
+      records.unshift(record);
+      save();
+      closeRecordModal();
+      showPage('ongoing');
+    }
+
+    // Submit result
+    function submitResult() {
+      const record = records.find(r => r.id === currentRecordId);
+      if (!record) return;
+
+      record.status = 'done';
+      record.result = currentResultType;
+
+      if (currentResultType === 'success') {
+        const effectiveEl = document.getElementById('formEffective');
+        const dayEl = document.getElementById('formDurationDay');
+        const hourEl = document.getElementById('formDurationHour');
+        if (effectiveEl) record.effective_action = effectiveEl.value.trim();
+        if (dayEl && hourEl) {
+          const days = dayEl.value;
+          const hours = hourEl.value;
+          record.duration = `${days}天${hours}小时`;
+        }
+      } else {
+        const failReasonEl = document.getElementById('formFailReason');
+        if (failReasonEl) record.fail_reason = failReasonEl.value.trim();
+      }
+
+      save();
+      closeResultModal();
+      showPage('archive');
+    }
+
+    // Save to localStorage
+    function save() {
+      localStorage.setItem('mindgym_records', JSON.stringify(records));
+    }
+
+    // Render all
+    function render() {
+      renderTodayCount();
+      renderOngoing();
+      renderArchive();
+      renderStats();
+    }
+
+    // Render today count
+    function renderTodayCount() {
+      const today = new Date().toDateString();
+      const todayCount = records.filter(r => new Date(r.created_at).toDateString() === today).length;
+      document.getElementById('todayCount').textContent = todayCount > 0 ? `今日训练 ${todayCount} 次` : '';
+    }
+
+    // Render ongoing
+    function renderOngoing() {
+      const ongoing = records.filter(r => r.status === 'ongoing');
+      const container = document.getElementById('ongoingList');
+
+      if (ongoing.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">🎯</div>
+            <div class="empty-text">暂无进行中的训练</div>
+            <div class="empty-sub">点击首页🏋️开始训练</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = ongoing.map(record => `
+        <div class="ongoing-card">
+          <div class="ongoing-header">
+            <div class="ongoing-emotion">
+              <span class="ongoing-icon">${emotions[record.emotion_type]?.icon || '❓'}</span>
+              <div class="ongoing-info">
+                <h3>${record.emotion_type}</h3>
+                <span>${new Date(record.created_at).toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+              </div>
+            </div>
+            <span class="ongoing-status">进行中</span>
+          </div>
+          ${record.solution ? `<div class="ongoing-content">${record.solution}</div>` : ''}
+          <div class="result-buttons">
+            <button class="result-btn success" onclick="openResultModal(${record.id}, 'success')">✓ 成功控制</button>
+            <button class="result-btn fail" onclick="openResultModal(${record.id}, 'fail')">✗ 还是失控</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Render archive
+    function renderArchive(filter = 'all') {
+      let done = records.filter(r => r.status === 'done');
+      
+      if (filter !== 'all') {
+        done = done.filter(r => r.emotion_type === filter);
+      }
+
+      const container = document.getElementById('archiveList');
+
+      if (done.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📁</div>
+            <div class="empty-text">暂无归档记录</div>
+            <div class="empty-sub">完成训练后会显示在这里</div>
+          </div>
+        `;
+        return;
+      }
+
+      // Group by emotion type, then by result
+      const grouped = {};
+      done.forEach(record => {
+        if (!grouped[record.emotion_type]) {
+          grouped[record.emotion_type] = { success: [], fail: [] };
+        }
+        if (record.result === 'success') {
+          grouped[record.emotion_type].success.push(record);
+        } else {
+          grouped[record.emotion_type].fail.push(record);
+        }
+      });
+
+      let html = '';
+      
+      // If not "all" filter, only show that emotion's data
+      if (filter !== 'all') {
+        const emotionData = grouped[filter];
+        if (emotionData) {
+          if (emotionData.success.length > 0) {
+            html += `<div class="archive-group-title success">✓ 成功战胜 (${emotionData.success.length})</div>`;
+            html += emotionData.success.map(r => renderArchiveCard(r)).join('');
+          }
+          if (emotionData.fail.length > 0) {
+            html += `<div class="archive-group-title fail">✗ 失败 (${emotionData.fail.length})</div>`;
+            html += emotionData.fail.map(r => renderArchiveCard(r)).join('');
+          }
+        }
+      } else {
+        // Show all emotions
+        Object.keys(grouped).forEach(emotion => {
+          const emotionData = grouped[emotion];
+          const total = emotionData.success.length + emotionData.fail.length;
+          if (total === 0) return;
+          
+          html += `<div class="archive-emotion-header">${emotions[emotion]?.icon || '❓'} ${emotion} (${total})</div>`;
+          
+          if (emotionData.success.length > 0) {
+            html += `<div class="archive-group-title success">✓ 成功战胜 (${emotionData.success.length})</div>`;
+            html += emotionData.success.map(r => renderArchiveCard(r)).join('');
+          }
+          if (emotionData.fail.length > 0) {
+            html += `<div class="archive-group-title fail">✗ 失败 (${emotionData.fail.length})</div>`;
+            html += emotionData.fail.map(r => renderArchiveCard(r)).join('');
+          }
+        });
+      }
+
+      container.innerHTML = html;
+    }
+
+    // Render single archive card with detail expansion
+    function renderArchiveCard(record) {
+      const dateStr = new Date(record.created_at).toLocaleString('zh-CN', { 
+        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+      });
+      const durationStr = record.duration ? ` · ${record.duration}` : '';
+      const displayTitle = record.solution ? record.solution.substring(0, 20) + (record.solution.length > 20 ? '...' : '') : record.emotion_type;
+      
+      return `
+        <div class="archive-card-wrap">
+          <button class="archive-card-delete" onclick="event.stopPropagation(); deleteRecord(${record.id})">×</button>
+          <div class="archive-card" onclick="toggleArchiveDetail(${record.id})">
+            <div class="archive-icon">${emotions[record.emotion_type]?.icon || '❓'}</div>
+            <div class="archive-info">
+              <h4>${displayTitle}</h4>
+              <span>${dateStr}${durationStr}</span>
+            </div>
+            <div class="archive-result ${record.result}">
+              ${record.result === 'success' ? '✓' : '✗'}
+            </div>
+          </div>
+        </div>
+        <div class="archive-detail" id="detail-${record.id}" style="display: none;">
+          <div class="detail-section">
+            <div class="detail-label">情绪类型</div>
+            <div class="detail-value">${record.emotion_type}</div>
+          </div>
+          ${record.description ? `
+          <div class="detail-section">
+            <div class="detail-label">事情经过</div>
+            <div class="detail-value">${record.description}</div>
+          </div>
+          ` : ''}
+          ${record.reason ? `
+          <div class="detail-section">
+            <div class="detail-label">原因分析</div>
+            <div class="detail-value">${record.reason}</div>
+          </div>
+          ` : ''}
+          ${record.solution ? `
+          <div class="detail-section">
+            <div class="detail-label">打算怎么做</div>
+            <div class="detail-value">${record.solution}</div>
+          </div>
+          ` : ''}
+          ${record.effective_action ? `
+          <div class="detail-section">
+            <div class="detail-label">有效方法</div>
+            <div class="detail-value">${record.effective_action}</div>
+          </div>
+          ` : ''}
+          ${record.fail_reason ? `
+          <div class="detail-section">
+            <div class="detail-label">复盘失败原因</div>
+            <div class="detail-value">${record.fail_reason}</div>
+          </div>
+          ` : ''}
+          ${record.duration ? `
+          <div class="detail-section">
+            <div class="detail-label">用时</div>
+            <div class="detail-value">${record.duration}</div>
+          </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    // Toggle archive detail expansion
+    function toggleArchiveDetail(id) {
+      const detail = document.getElementById(`detail-${id}`);
+      if (detail) {
+        detail.style.display = detail.style.display === 'none' ? 'block' : 'none';
+      }
+    }
+
+    // Render stats
+    function renderStats() {
+      const done = records.filter(r => r.status === 'done');
+      const total = done.length;
+      const success = done.filter(r => r.result === 'success').length;
+      const rate = total > 0 ? Math.round((success / total) * 100) : 0;
+
+      const withDuration = done.filter(r => r.duration);
+      const totalMinutes = withDuration.reduce((sum, r) => sum + parseDurationToMinutes(r.duration), 0);
+      const avgMinutes = withDuration.length > 0 ? Math.round(totalMinutes / withDuration.length) : 0;
+
+      document.getElementById('statTotal').textContent = total;
+      document.getElementById('statRate').textContent = total > 0 ? `${rate}%` : '--';
+      document.getElementById('statAvg').textContent = avgMinutes > 0 ? formatMinutesToDuration(avgMinutes) : '--';
+
+      // Bar chart
+      const emotionTypes = ['焦虑', '烦躁', '厌学', '刷手机>1h', '困', '熬夜', '忽略优先级', '其他'];
+      const chartContainer = document.getElementById('barChart');
+
+      const maxCount = Math.max(...emotionTypes.map(type => done.filter(r => r.emotion_type === type).length), 1);
+
+      chartContainer.innerHTML = emotionTypes.map(type => {
+        const typeRecords = done.filter(r => r.emotion_type === type);
+        const typeSuccess = typeRecords.filter(r => r.result === 'success').length;
+        const typeRate = typeRecords.length > 0 ? Math.round((typeSuccess / typeRecords.length) * 100) : 0;
+        const height = (typeRecords.length / maxCount) * 100;
+
+        return `
+          <div class="bar-item">
+            <div class="bar-value">${typeRate}%</div>
+            <div class="bar-container">
+              <div class="bar" style="height: ${height}%"></div>
+            </div>
+            <div class="bar-label">${type}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Filter tabs
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        renderArchive(tab.dataset.filter);
+      });
+    });
+
+    // Initialize app
+    init();
+  </script>
+</body>
+</html>
