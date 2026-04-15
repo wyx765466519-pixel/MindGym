@@ -107,6 +107,7 @@
       margin: 0 auto;
       position: relative;
       z-index: 1;
+      min-height: calc(100vh - 140px);
     }
 
     .page.active {
@@ -153,6 +154,18 @@
       font-size: 13px;
       color: #95A5A6;
       margin-top: 20px;
+    }
+
+    .home-quote {
+      font-size: 12px;
+      color: #7F8C8D;
+      text-align: center;
+      padding: 0 20px;
+      letter-spacing: 1px;
+      position: absolute;
+      bottom: 90px;
+      left: 0;
+      right: 0;
     }
 
     /* Emotion Select */
@@ -771,7 +784,7 @@
 <body>
   <header class="header">
     <div class="logo">MINDGYM</div>
-    <div class="tagline">每一次记录，都是训练</div>
+    <div class="tagline">像训练肌肉一样，训练你的情绪</div>
     <div class="today-count" id="todayCount"></div>
   </header>
 
@@ -783,6 +796,7 @@
         <div class="gym-hint">点击开始训练</div>
       </div>
     </div>
+    <div class="home-quote">情绪不是命运，而是一种可以训练的能力。</div>
   </div>
 
   <!-- Page: Ongoing -->
